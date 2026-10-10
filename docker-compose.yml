@@ -1,0 +1,45 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: rag
+      POSTGRES_DB: rag_hardware
+    ports:
+      - "5433:5432"   # 5433 on the host to avoid clashing with a local Postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag -d rag_hardware"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://rag:rag@db:5432/rag_hardware
+      LOG_JSON: "true"
+      WARMUP_MODELS: "true"
+    ports:
+      - "8000:8000"
+    volumes:
+      - models:/models          # Hugging Face model cache survives rebuilds
+      - ./data:/app/data        # catalogs / datasheets to ingest
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Optional cache: `docker compose --profile cache up` and set REDIS_URL=redis://redis:6379/0
+  redis:
+    image: redis:7-alpine
+    profiles: ["cache"]
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:
+  models:

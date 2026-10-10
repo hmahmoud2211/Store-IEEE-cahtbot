@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Component RAG Console</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='6' width='20' height='20' rx='3' fill='%232f6fdb'/%3E%3Cpath d='M10 2v4M16 2v4M22 2v4M10 26v4M16 26v4M22 26v4M2 10h4M2 16h4M2 22h4M26 10h4M26 16h4M26 22h4' stroke='%232f6fdb' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --panel-2: #f1f3f6; --border: #e1e5eb; --text: #1b2129; --muted: #5d6877;
+  --accent: #2f6fdb; --accent-soft: #e6eefc; --accent-text: #ffffff;
+  --ok: #1f8a4c; --ok-soft: #e3f4ea; --warn: #b26a00; --warn-soft: #fdf1dc; --bad: #c0362c; --bad-soft: #fbe6e4;
+  --user-bubble: #2f6fdb; --user-text: #ffffff;
+  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+  --radius: 10px; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --panel: #171b21; --panel-2: #1e232b; --border: #2a313b; --text: #e6e9ee; --muted: #9aa5b4;
+    --accent: #5b8ff0; --accent-soft: #1d2a44; --accent-text: #0b1220;
+    --ok: #4cc283; --ok-soft: #15301f; --warn: #e3a646; --warn-soft: #33270f; --bad: #f07267; --bad-soft: #3a1c19;
+    --user-bubble: #2d5bb8; --user-text: #ffffff; --shadow: none; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216; --panel: #171b21; --panel-2: #1e232b; --border: #2a313b; --text: #e6e9ee; --muted: #9aa5b4;
+  --accent: #5b8ff0; --accent-soft: #1d2a44; --accent-text: #0b1220;
+  --ok: #4cc283; --ok-soft: #15301f; --warn: #e3a646; --warn-soft: #33270f; --bad: #f07267; --bad-soft: #3a1c19;
+  --user-bubble: #2d5bb8; --user-text: #ffffff; --shadow: none; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--accent); }
+code, pre, .mono { font-family: var(--mono); font-size: 12.5px; }
+
+/* ---------- header / tabs ---------- */
+header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
+header h1 { font-size: 15px; margin: 0; font-weight: 650; white-space: nowrap; }
+header .spacer { flex: 1; }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; }
+nav.tabs button { border: 0; background: none; padding: 7px 12px; border-radius: 7px; cursor: pointer; color: var(--muted); font-weight: 550; white-space: nowrap; }
+nav.tabs button:hover { background: var(--panel-2); color: var(--text); }
+nav.tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--panel-2); color: var(--muted); border: 1px solid var(--border); white-space: nowrap; }
+.pill .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pill.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+.pill.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.pill.bad { color: var(--bad); background: var(--bad-soft); border-color: transparent; }
+.pill.accent { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+.icon-btn { border: 1px solid var(--border); background: var(--panel); border-radius: 7px; padding: 5px 9px; cursor: pointer; }
+.icon-btn:hover { background: var(--panel-2); }
+
+main { padding: 16px; max-width: 1500px; margin: 0 auto; }
+section.tab { display: none; }
+section.tab.active { display: block; }
+
+/* ---------- generic ---------- */
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.card-h { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); font-weight: 650; }
+.card-b { padding: 12px 14px; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.grow { flex: 1; min-width: 0; }
+.btn { border: 1px solid var(--border); background: var(--panel); padding: 7px 13px; border-radius: 8px; cursor: pointer; font-weight: 550; }
+.btn:hover { background: var(--panel-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.danger { color: var(--bad); }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+input[type=text], input[type=number], input[type=password], select, textarea { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; min-width: 0; }
+input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+label.check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-size: 12px; color: var(--muted); font-weight: 600; background: var(--panel-2); position: sticky; top: 0; }
+tr.clickable { cursor: pointer; }
+tr.clickable:hover td { background: var(--panel-2); }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.table-wrap { overflow-x: auto; }
+.empty { padding: 28px; text-align: center; color: var(--muted); }
+.error-box { background: var(--bad-soft); color: var(--bad); border-radius: 8px; padding: 8px 12px; }
+details > summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+pre.block { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; overflow: auto; max-height: 420px; white-space: pre-wrap; word-break: break-word; margin: 6px 0 0; }
+.spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; display: inline-block; vertical-align: -2px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- ask ---------- */
+.ask-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.chat { display: flex; flex-direction: column; height: calc(100vh - 92px); min-height: 480px; }
+.messages { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.msg { max-width: 92%; }
+.msg.user { align-self: flex-end; background: var(--user-bubble); color: var(--user-text); padding: 8px 13px; border-radius: 14px 14px 4px 14px; white-space: pre-wrap; }
+.msg.bot { align-self: flex-start; background: var(--panel-2); border: 1px solid var(--border); padding: 10px 13px; border-radius: 14px 14px 14px 4px; cursor: pointer; }
+.msg.bot.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.msg.bot .meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+.answer h4 { margin: 10px 0 4px; font-size: 14px; }
+.answer p { margin: 0 0 8px; }
+.answer ul, .answer ol { margin: 4px 0 8px; padding-left: 20px; }
+.answer li.nested { margin-left: 18px; }
+.answer table { margin: 6px 0; font-size: 13px; }
+.answer :last-child { margin-bottom: 0; }
+button.cite { border: 0; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; padding: 0 5px; border-radius: 5px; cursor: pointer; vertical-align: 1px; margin: 0 1px; }
+.composer { border-top: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.composer textarea { width: 100%; resize: none; min-height: 44px; max-height: 160px; }
+.examples { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--border); background: var(--panel); border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer; color: var(--muted); }
+.chip:hover { color: var(--accent); border-color: var(--accent); }
+.welcome { margin: auto; text-align: center; color: var(--muted); max-width: 520px; padding: 20px; }
+.welcome h2 { color: var(--text); font-size: 17px; margin: 0 0 6px; }
+
+.inspector { height: calc(100vh - 92px); min-height: 480px; overflow-y: auto; }
+.inspector .card-b + .card-b { border-top: 1px solid var(--border); }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 3px 14px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; word-break: break-word; }
+.sec-title { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 700; margin: 0 0 8px; }
+.source { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; transition: background .3s, border-color .3s; }
+.source.flash { background: var(--accent-soft); border-color: var(--accent); }
+.source .num-badge { display: inline-block; min-width: 22px; text-align: center; background: var(--accent); color: var(--accent-text); border-radius: 5px; font-weight: 700; font-size: 12px; margin-right: 6px; }
+.bars { display: grid; grid-template-columns: max-content 1fr max-content; gap: 4px 10px; align-items: center; font-size: 12px; }
+.bar { height: 8px; background: var(--accent); border-radius: 4px; min-width: 2px; }
+.bar-track { background: var(--panel-2); border-radius: 4px; }
+.score { font-family: var(--mono); font-size: 12px; }
+
+/* ---------- other tabs ---------- */
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; margin-bottom: 12px; }
+.toolbar .field { display: flex; flex-direction: column; gap: 3px; }
+.toolbar .field span { font-size: 12px; color: var(--muted); font-weight: 600; }
+.two-col { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--panel-2); border-radius: 8px; padding: 10px 12px; }
+.stat .v { font-size: 20px; font-weight: 700; }
+.stat .k { font-size: 12px; color: var(--muted); }
+.snippet { color: var(--muted); font-size: 12.5px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.detail-row td { background: var(--panel-2); }
+
+@media (max-width: 960px) {
+  .ask-layout, .two-col { grid-template-columns: 1fr; }
+  .chat { height: 70vh; }
+  .inspector { height: auto; }
+  header h1 .sub { display: none; }
+}
+@media (max-width: 600px) {
+  main { padding: 10px 16px; }
+  header { flex-wrap: wrap; }
+  nav.tabs { order: 3; width: 100%; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Component RAG <span class="sub muted">· test console</span></h1>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="ask" aria-selected="true">Ask</button>
+    <button role="tab" data-tab="search" aria-selected="false">Retrieval</button>
+    <button role="tab" data-tab="components" aria-selected="false">Components</button>
+    <button role="tab" data-tab="documents" aria-selected="false">Documents</button>
+    <button role="tab" data-tab="system" aria-selected="false">System</button>
+  </nav>
+  <span class="spacer"></span>
+  <span id="health-pill" class="pill" title="API health"><span class="dot"></span>checking…</span>
+  <button id="theme-btn" class="icon-btn" title="Toggle light/dark theme" aria-label="Toggle theme">◐</button>
+</header>
+
+<main>
+  <!-- ======================= ASK ======================= -->
+  <section class="tab active" id="tab-ask">
+    <div class="ask-layout">
+      <div class="card chat">
+        <div class="card-h">
+          <span>Conversation</span>
+          <span class="spacer grow"></span>
+          <label class="check small" title="Off = deterministic template answers (no Gemini call)"><input type="checkbox" id="use-llm" checked> Use LLM</label>
+          <label class="check small" title="Send previous turns so follow-ups like “these components” work"><input type="checkbox" id="use-history" checked> Follow-ups</label>
+          <button class="btn small" id="new-chat">New chat</button>
+        </div>
+        <div class="messages" id="messages">
+          <div class="welcome" id="welcome">
+            <h2>Ask about components, prices and projects</h2>
+            <div>Answers are grounded in the knowledge base. Click an answer to inspect its sources, routing, timings and retrieved chunks.</div>
+          </div>
+        </div>
+        <form class="composer" id="ask-form">
+          <div class="examples" id="examples"></div>
+          <div class="row">
+            <textarea id="question" class="grow" rows="1" placeholder="e.g. Which counter ICs cost less than 25 EGP?  (Enter to send, Shift+Enter for a new line)" maxlength="2000"></textarea>
+            <button class="btn primary" id="send-btn" type="submit">Send</button>
+          </div>
+        </form>
+      </div>
+
+      <aside class="card inspector" id="inspector">
+        <div class="card-h">Answer inspector</div>
+        <div class="empty" id="inspector-empty">Select an answer to see how it was produced.</div>
+        <div id="inspector-body"></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===================== RETRIEVAL ===================== -->
+  <section class="tab" id="tab-search">
+    <form class="toolbar" id="search-form">
+      <label class="field grow"><span>Query</span><input type="text" id="search-q" placeholder="e.g. HC SR04, decade counter, real time clock" required></label>
+      <label class="field"><span>Top K</span><input type="number" id="search-k" value="8" min="1" max="30" style="width:80px"></label>
+      <label class="check" style="padding-bottom:8px"><input type="checkbox" id="search-rerank" checked> Rerank</label>
+      <button class="btn primary">Search</button>
+    </form>
+    <div id="search-meta" class="row" style="margin-bottom:10px"></div>
+    <div class="card"><div class="table-wrap" id="search-results"><div class="empty">Runs hybrid retrieval only (vector + keyword → RRF → reranker), without generation.</div></div></div>
+  </section>
+
+  <!-- ===================== COMPONENTS ===================== -->
+  <section class="tab" id="tab-components">
+    <form class="toolbar" id="comp-form">
+      <label class="field grow"><span>Name / alias / part number</span><input type="text" id="comp-q" placeholder="e.g. 555, sr04, breadboard"></label>
+      <label class="field"><span>Category</span><select id="comp-cat"><option value="">All</option></select></label>
+      <label class="field"><span>Min price</span><input type="number" id="comp-min" min="0" step="any" style="width:100px"></label>
+      <label class="field"><span>Max price</span><input type="number" id="comp-max" min="0" step="any" style="width:100px"></label>
+      <label class="field"><span>Sort</span><select id="comp-sort"><option value="">Category</option><option value="asc">Cheapest first</option><option value="desc">Most expensive first</option></select></label>
+      <button class="btn primary">Apply</button>
+    </form>
+    <div class="card"><div class="table-wrap" id="comp-results"></div></div>
+  </section>
+
+  <!-- ===================== DOCUMENTS ===================== -->
+  <section class="tab" id="tab-documents">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-h">Ingested documents <span class="spacer grow"></span><button class="btn small" id="docs-refresh" type="button">Refresh</button></div>
+        <div class="table-wrap" id="docs-list"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="card-h">Upload &amp; ingest</div>
+          <form class="card-b" id="upload-form" style="display:flex;flex-direction:column;gap:10px">
+            <input type="file" id="upload-file" required accept=".pdf,.docx,.csv,.tsv,.xlsx,.xls,.xlsm,.txt,.md">
+            <div class="row">
+              <input type="text" id="upload-title" class="grow" placeholder="Title (optional)">
+              <select id="upload-type" title="Loader"><option value="">Auto-detect</option><option>pdf</option><option>docx</option><option>csv</option><option>excel</option><option>text</option></select>
+              <select id="upload-vis" title="Visibility"><option>public</option><option>organization</option><option>private</option></select>
+            </div>
+            <div class="row">
+              <label class="check small"><input type="checkbox" id="upload-force"> Re-ingest even if unchanged</label>
+              <span class="spacer grow"></span>
+              <button class="btn primary" id="upload-btn">Ingest</button>
+            </div>
+            <div id="upload-status" class="small"></div>
+          </form>
+        </div>
+        <div class="card" id="doc-detail-card" hidden>
+          <div class="card-h" id="doc-detail-title">Document</div>
+          <div class="card-b" id="doc-detail"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SYSTEM ===================== -->
+  <section class="tab" id="tab-system">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-h">Health <span class="spacer grow"></span><button class="btn small" id="health-refresh" type="button">Refresh</button></div>
+        <div class="card-b" id="health-body"><span class="spinner"></span></div>
+      </div>
+      <div class="card">
+        <div class="card-h">Connection</div>
+        <div class="card-b" style="display:flex;flex-direction:column;gap:10px">
+          <label class="field" style="display:flex;flex-direction:column;gap:3px"><span class="small muted">API key (only if <code>API_KEYS</code> is set on the server)</span><input type="password" id="api-key" placeholder="X-API-Key"></label>
+          <label class="field" style="display:flex;flex-direction:column;gap:3px"><span class="small muted">User id (X-User-Id, for permission testing)</span><input type="text" id="user-id" placeholder="optional"></label>
+          <label class="field" style="display:flex;flex-direction:column;gap:3px"><span class="small muted">Organization id (X-Org-Id)</span><input type="text" id="org-id" placeholder="optional"></label>
+          <div class="small muted">Saved in this browser only. API docs: <a href="/docs" target="_blank" rel="noopener">/docs</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+const API = "/api/v1";
+const EXAMPLES = [
+  "What is the price of a 74LS85 comparator?",
+  "Which counter ICs cost less than 25 EGP?",
+  "What components can I use to build a digital clock?",
+  "Compare the DS1307 and DS3231.",
+  "What is the cheapest 7-segment display?",
+  "Give me all components related to counters.",
+  "What components do I need for a timer circuit?",
+  "Which sensor is cheaper, HC-SR04 or IR obstacle sensor?",
+  "How much would 2 x NE555, 1 x breadboard and 5 x LED cost?",
+  "Show the source of the price you used.",
+  "What is the price of an ESP32?",
+];
+
+// ------------------------------------------------------------------ utils
+const $ = (sel, el = document) => el.querySelector(sel);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k, d = "") { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } },
+};
+const fmtMs = (ms) => ms == null ? "–" : ms >= 1000 ? (ms / 1000).toFixed(2) + " s" : Math.round(ms) + " ms";
+const fmtNum = (v, d = 3) => v == null ? "–" : Number(v).toFixed(d);
+const fmtPrice = (min, max, cur) => {
+  if (min == null) return "–";
+  const a = +min, b = +max, f = (x) => (Math.round(x * 100) / 100).toString();
+  return (a === b ? f(a) : `${f(a)}–${f(b)}`) + (cur ? " " + cur : "");
+};
+
+async function api(path, { method = "GET", body, form } = {}) {
+  const headers = {};
+  const key = store.get("rag.apiKey"), user = store.get("rag.userId"), org = store.get("rag.orgId");
+  if (key) headers["X-API-Key"] = key;
+  if (user) headers["X-User-Id"] = user;
+  if (org) headers["X-Org-Id"] = org;
+  let payload;
+  if (form) payload = form;
+  else if (body !== undefined) { headers["Content-Type"] = "application/json"; payload = JSON.stringify(body); }
+  const res = await fetch(API + path, { method, headers, body: payload });
+  if (res.status === 204) return null;
+  let data = null;
+  try { data = await res.json(); } catch { /* non-JSON */ }
+  if (!res.ok) {
+    let msg = data?.detail ?? `${res.status} ${res.statusText}`;
+    if (Array.isArray(msg)) msg = msg.map((d) => `${(d.loc || []).join(".")}: ${d.msg}`).join("; ");
+    throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
+  }
+  return data;
+}
+
+// Minimal, safe Markdown → HTML (input is escaped first). Turns [n] into citation buttons.
+function inline(s) {
+  return s
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[\s(])\*([^*\s][^*]*)\*(?=[\s).,;:!?]|$)/g, "$1<em>$2</em>")
+    .replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_, ids) => ids.split(",").map((n) => `<button type="button" class="cite" data-n="${n.trim()}">${n.trim()}</button>`).join(""));
+}
+function markdown(src) {
+  const lines = esc(src).split("\n");
+  let html = "", list = null, para = [], table = [], code = null;
+  const flushPara = () => { if (para.length) { html += `<p>${inline(para.join("<br>"))}</p>`; para = []; } };
+  const flushList = () => { if (list) { html += `</${list}>`; list = null; } };
+  const flushTable = () => {
+    if (!table.length) return;
+    const rows = table.filter((r) => !/^\|?\s*:?-{2,}/.test(r)).map((r) => r.replace(/^\||\|$/g, "").split("|").map((c) => inline(c.trim())));
+    html += "<table>" + rows.map((r, i) => "<tr>" + r.map((c) => i === 0 ? `<th>${c}</th>` : `<td>${c}</td>`).join("") + "</tr>").join("") + "</table>";
+    table = [];
+  };
+  for (const raw of lines) {
+    if (/^\s*```/.test(raw)) {
+      if (code === null) { flushTable(); flushPara(); flushList(); code = []; }
+      else { html += `<pre class="block"><code>${code.join("\n")}</code></pre>`; code = null; }
+      continue;
+    }
+    if (code !== null) { code.push(raw); continue; }
+    const line = raw.replace(/\s+$/, "");
+    if (/^\s*\|.*\|\s*$/.test(line)) { flushPara(); flushList(); table.push(line.trim()); continue; }
+    flushTable();
+    let m;
+    if (!line.trim()) { flushPara(); flushList(); continue; }
+    if ((m = line.match(/^#{1,6}\s+(.*)/))) { flushPara(); flushList(); html += `<h4>${inline(m[1])}</h4>`; continue; }
+    if ((m = line.match(/^(\s*)[-*•]\s+(.*)/)) || (m = line.match(/^(\s*)\d+[.)]\s+(.*)/))) {
+      flushPara();
+      const type = /^\s*\d/.test(line) ? "ol" : "ul";
+      if (list !== type) { flushList(); html += `<${type}>`; list = type; }
+      html += `<li${m[1].length >= 2 ? ' class="nested"' : ""}>${inline(m[2])}</li>`;
+      continue;
+    }
+    flushList(); para.push(line);
+  }
+  if (code !== null) html += `<pre class="block"><code>${code.join("\n")}</code></pre>`;
+  flushTable(); flushPara(); flushList();
+  return html;
+}
+const splitAnswer = (text) => {
+  const i = text.search(/\n\nSources:\n/);
+  return i === -1 ? text : text.slice(0, i);
+};
+
+// ------------------------------------------------------------------ tabs
+const loaded = {};
+document.querySelectorAll("nav.tabs button").forEach((btn) => btn.addEventListener("click", () => showTab(btn.dataset.tab)));
+function showTab(name) {
+  document.querySelectorAll("nav.tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+  document.querySelectorAll("section.tab").forEach((s) => s.classList.toggle("active", s.id === "tab-" + name));
+  store.set("rag.tab", name);
+  if (!loaded[name]) {
+    loaded[name] = true;
+    if (name === "components") loadComponents();
+    if (name === "documents") loadDocuments();
+    if (name === "system") loadHealth(true);
+  }
+}
+
+// ------------------------------------------------------------------ theme
+const themeBtn = $("#theme-btn");
+function applyTheme(t) { if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; }
+applyTheme(store.get("rag.theme"));
+themeBtn.addEventListener("click", () => {
+  const current = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = current === "dark" ? "light" : "dark";
+  applyTheme(next); store.set("rag.theme", next);
+});
+
+// ------------------------------------------------------------------ health
+async function loadHealth(renderPanel = false) {
+  const pill = $("#health-pill");
+  try {
+    const h = await api("/health");
+    pill.className = "pill " + (h.status === "ok" ? "ok" : h.status === "degraded" ? "warn" : "bad");
+    pill.innerHTML = `<span class="dot"></span>${esc(h.status)} · ${esc(h.checks.components ?? "?")} components`;
+    pill.title = `LLM: ${h.config.llm_model}\nEmbeddings: ${h.config.embedding_model}\nReranker: ${h.config.reranker}`;
+    if (renderPanel || loaded.system) renderHealth(h);
+  } catch (e) {
+    pill.className = "pill bad"; pill.innerHTML = `<span class="dot"></span>API unreachable`; pill.title = e.message;
+    if (renderPanel || loaded.system) $("#health-body").innerHTML = `<div class="error-box">${esc(e.message)}</div>`;
+  }
+}
+function renderHealth(h) {
+  const c = h.checks, cfg = h.config;
+  const stats = [["Status", h.status], ["Documents", c.documents], ["Chunks", c.chunks], ["Components", c.components],
+    ["Need re-index", c.chunks_needing_reindex], ["Vector dim", c.embedding_column_dimension], ["pgvector", c.pgvector_version], ["Database", c.database]];
+  $("#health-body").innerHTML = `
+    <div class="stat-grid">${stats.map(([k, v]) => `<div class="stat"><div class="v">${esc(v ?? "–")}</div><div class="k">${esc(k)}</div></div>`).join("")}</div>
+    <p class="sec-title" style="margin-top:16px">Configuration</p>
+    <dl class="kv">${Object.entries(cfg).map(([k, v]) => `<dt>${esc(k)}</dt><dd class="mono">${esc(v)}</dd>`).join("")}</dl>
+    ${c.dimension_mismatch ? `<div class="error-box" style="margin-top:10px">Dimension mismatch: ${esc(c.dimension_mismatch)}</div>` : ""}`;
+}
+$("#health-refresh").addEventListener("click", () => loadHealth(true));
+
+// connection settings
+for (const [id, key] of [["api-key", "rag.apiKey"], ["user-id", "rag.userId"], ["org-id", "rag.orgId"]]) {
+  const el = $("#" + id); el.value = store.get(key);
+  el.addEventListener("change", () => { store.set(key, el.value.trim()); loadHealth(); });
+}
+
+// ================================================================== ASK
+const state = { history: [], turns: [], selected: -1 };
+const messagesEl = $("#messages"), questionEl = $("#question"), sendBtn = $("#send-btn");
+
+$("#examples").innerHTML = EXAMPLES.map((q) => `<button type="button" class="chip">${esc(q)}</button>`).join("");
+$("#examples").addEventListener("click", (e) => { const b = e.target.closest(".chip"); if (b) { questionEl.value = b.textContent; ask(); } });
+$("#use-llm").checked = store.get("rag.useLlm", "1") === "1";
+$("#use-llm").addEventListener("change", (e) => store.set("rag.useLlm", e.target.checked ? "1" : "0"));
+$("#ask-form").addEventListener("submit", (e) => { e.preventDefault(); ask(); });
+questionEl.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } });
+questionEl.addEventListener("input", () => { questionEl.style.height = "auto"; questionEl.style.height = Math.min(questionEl.scrollHeight, 160) + "px"; });
+$("#new-chat").addEventListener("click", () => {
+  state.history = []; state.turns = []; state.selected = -1;
+  messagesEl.innerHTML = ""; messagesEl.append(welcomeEl);
+  renderInspector(null);
+});
+const welcomeEl = $("#welcome");
+
+function addMessage(cls, html) {
+  welcomeEl.remove();
+  const div = document.createElement("div");
+  div.className = "msg " + cls; div.innerHTML = html;
+  messagesEl.append(div); messagesEl.scrollTop = messagesEl.scrollHeight;
+  return div;
+}
+
+async function ask() {
+  const question = questionEl.value.trim();
+  if (!question || sendBtn.disabled) return;
+  questionEl.value = ""; questionEl.style.height = "auto";
+  addMessage("user", esc(question));
+  const bubble = addMessage("bot", `<span class="spinner"></span> <span class="muted">Retrieving and generating…</span>`);
+  sendBtn.disabled = true;
+  const body = {
+    question,
+    use_llm: $("#use-llm").checked,
+    include_debug: true,
+    history: $("#use-history").checked ? state.history.slice(-6) : [],
+  };
+  const started = performance.now();
+  try {
+    const res = await api("/query", { method: "POST", body });
+    const roundtrip = performance.now() - started;
+    const idx = state.turns.push({ question, res, roundtrip }) - 1;
+    renderBotMessage(bubble, res, roundtrip, idx);
+    state.history.push({ role: "user", content: question }, { role: "assistant", content: splitAnswer(res.answer).slice(0, 4000) });
+    selectTurn(idx);
+  } catch (e) {
+    bubble.classList.remove("selected");
+    bubble.innerHTML = `<div class="error-box">Request failed: ${esc(e.message)}</div>`;
+  } finally {
+    sendBtn.disabled = false; questionEl.focus();
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+}
+
+function badges(res, roundtrip) {
+  const m = res.retrieval_metadata || {};
+  const out = [`<span class="pill accent">${esc(res.query_type)}</span>`];
+  if (m.no_answer) out.push(`<span class="pill warn">no answer</span>`);
+  if (m.llm_fallback) out.push(`<span class="pill warn" title="${esc(m.grounding_warning || m.llm_error || "")}">LLM fallback</span>`);
+  else if (m.llm_model) out.push(`<span class="pill">${esc(m.llm_model)}</span>`);
+  out.push(`<span class="pill">${fmtMs(m.timings_ms?.total_ms ?? roundtrip)}</span>`);
+  if (res.sources?.length) out.push(`<span class="pill">${res.sources.length} source${res.sources.length > 1 ? "s" : ""}</span>`);
+  return out.join("");
+}
+
+function renderBotMessage(bubble, res, roundtrip, idx) {
+  bubble.dataset.idx = idx;
+  bubble.innerHTML = `<div class="meta">${badges(res, roundtrip)}</div><div class="answer">${markdown(splitAnswer(res.answer))}</div>`;
+  bubble.addEventListener("click", (e) => {
+    const cite = e.target.closest("button.cite");
+    selectTurn(idx);
+    if (cite) flashSource(cite.dataset.n);
+  });
+}
+
+function selectTurn(idx) {
+  state.selected = idx;
+  messagesEl.querySelectorAll(".msg.bot").forEach((m) => m.classList.toggle("selected", Number(m.dataset.idx) === idx));
+  renderInspector(state.turns[idx]);
+}
+
+function flashSource(n) {
+  const el = document.getElementById("src-" + n);
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1300);
+}
+
+function renderInspector(turn) {
+  const body = $("#inspector-body");
+  $("#inspector-empty").hidden = !!turn;
+  if (!turn) { body.innerHTML = ""; return; }
+  const { res, roundtrip, question } = turn;
+  const m = res.retrieval_metadata || {}, a = m.analysis || {};
+  const blocks = [];
+
+  // Summary
+  const summary = [
+    ["Question", esc(question)],
+    ["Query type", `<span class="pill accent">${esc(res.query_type)}</span>`],
+    ["Routing", esc((m.route_reasons || []).join("; ") || "–")],
+    ["LLM", esc(m.llm_model || "–") + (m.llm_fallback ? ` <span class="pill warn">fallback</span>` : "")],
+    ["Grounding", m.grounding_warning ? `<span class="pill bad">${esc(m.grounding_warning)}</span>` : (m.no_answer ? `<span class="pill warn">refused (no reliable data)</span>` : `<span class="pill ok">all prices grounded</span>`)],
+    ["Server time", fmtMs(m.timings_ms?.total_ms)], ["Round trip", fmtMs(roundtrip)],
+  ];
+  if (m.retrieved_candidates != null) summary.push(["Candidates", `vector ${m.vector_candidates ?? 0} · keyword ${m.keyword_candidates ?? 0} → reranked ${m.retrieved_candidates} → kept ${m.final_chunks ?? 0}`]);
+  if (m.top_rerank_score != null) summary.push(["Top rerank score", fmtNum(m.top_rerank_score, 4)]);
+  if (m.rerank_query) summary.push(["Reranked against", `“${esc(m.rerank_query)}”`]);
+  if (m.invalid_citations_removed) summary.push(["Removed citations", esc(m.invalid_citations_removed.join(", "))]);
+  blocks.push(`<p class="sec-title">Summary</p><dl class="kv">${summary.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`);
+
+  // Sources
+  if (res.sources?.length) {
+    blocks.push(`<p class="sec-title">Sources</p>` + res.sources.map((s) => `
+      <div class="source" id="src-${s.source_id}">
+        <div><span class="num-badge">${s.source_id}</span><strong>${esc(s.label)}</strong></div>
+        <div class="small muted" style="margin-top:3px">
+          ${esc(s.kind)} · ${esc(s.document || "–")}${s.source_type ? " (" + esc(s.source_type) + ")" : ""}
+          ${s.page ? " · page " + esc(s.page) : ""}${s.section ? " · " + esc(s.section) : ""}
+          ${s.price_text ? ` · price text <span class="mono">“${esc(s.price_text)}”</span>` : ""}
+          ${s.score != null ? " · score " + fmtNum(s.score, 3) : ""}
+          ${s.source_url ? ` · <a href="${esc(s.source_url)}" target="_blank" rel="noopener">link</a>` : ""}
+        </div>
+      </div>`).join(""));
+  }
+
+  // Calculation
+  if (res.calculation) {
+    const c = res.calculation;
+    blocks.push(`<p class="sec-title">Calculation (computed in code)</p>
+      <div class="table-wrap"><table>
+        <tr><th>Item</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Line total</th></tr>
+        ${c.items.map((i) => `<tr><td>${esc(i.component)}${i.assumed ? `<div class="small muted">assumed for “${esc(i.mention)}”${i.alternatives.length ? "; alternatives: " + esc(i.alternatives.join(", ")) : ""}</div>` : ""}</td>
+          <td class="num">${esc(+i.quantity)}</td><td class="num">${esc(i.unit_price)}</td><td class="num">${esc(i.line_total)}</td></tr>`).join("")}
+        <tr><td colspan="3"><strong>Estimated total</strong></td><td class="num"><strong>${esc(c.total || "–")}</strong></td></tr>
+      </table></div>
+      ${c.unresolved?.length ? `<div class="small" style="margin-top:6px">Not found: ${esc(c.unresolved.join(", "))}</div>` : ""}`);
+  }
+
+  // Comparison
+  if (res.comparison?.length) {
+    blocks.push(`<p class="sec-title">Comparison facts (computed in code)</p><ul style="margin:0;padding-left:18px">${res.comparison.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>`);
+  }
+
+  // Structured results
+  if (res.structured_results?.length) {
+    blocks.push(`<p class="sec-title">Structured results (SQL)</p><div class="table-wrap"><table>
+      <tr><th>Component</th><th>Category</th><th class="num">Price</th><th>Match</th></tr>
+      ${res.structured_results.map((c) => `<tr><td>${esc(c.name)}</td><td>${esc(c.category)}</td>
+        <td class="num">${esc(fmtPrice(c.price_min, c.price_max, c.currency))}</td>
+        <td class="small">${c.partial_match ? '<span class="pill warn">partial</span>' : esc(c.matched_by || "filter")}</td></tr>`).join("")}
+    </table></div>`);
+  }
+
+  // Timings
+  const t = { ...(m.timings_ms || {}) }; delete t.total_ms;
+  const entries = Object.entries(t).filter(([, v]) => typeof v === "number");
+  if (entries.length) {
+    const max = Math.max(...entries.map(([, v]) => v), 1);
+    blocks.push(`<p class="sec-title">Timings</p><div class="bars">${entries.map(([k, v]) => `
+      <span>${esc(k.replace(/_ms$/, "").replace(/_/g, " "))}</span>
+      <div class="bar-track"><div class="bar" style="width:${Math.max(1, (v / max) * 100)}%"></div></div>
+      <span class="num">${fmtMs(v)}</span>`).join("")}</div>`);
+  }
+
+  // Retrieved chunks
+  const hits = res.debug?.hits || [];
+  if (hits.length) {
+    blocks.push(`<p class="sec-title">Retrieved chunks (after rerank &amp; threshold)</p><div class="table-wrap"><table>
+      <tr><th>Chunk</th><th class="num">Rerank</th><th class="num">RRF</th><th class="num">Vector sim</th><th>Ranks</th></tr>
+      ${hits.map((h) => `<tr><td>${esc(h.component || h.section || h.chunk_id.slice(0, 8))}${h.page ? ` <span class="muted small">p.${esc(h.page)}</span>` : ""}</td>
+        <td class="num score">${fmtNum(h.scores.rerank, 4)}</td><td class="num score">${fmtNum(h.scores.rrf, 4)}</td>
+        <td class="num score">${fmtNum(h.scores.vector_similarity, 3)}</td>
+        <td class="small mono">${esc(Object.entries(h.ranks).map(([k, v]) => k[0] + v).join(" "))}</td></tr>`).join("")}
+    </table></div>`);
+  }
+
+  // Query analysis + context
+  blocks.push(`<details><summary>Query analysis</summary><pre class="block">${esc(JSON.stringify(a, null, 2))}</pre></details>`);
+  if (res.debug?.context) blocks.push(`<details><summary>Context sent to the LLM</summary><pre class="block">${esc(res.debug.context)}</pre></details>`);
+  blocks.push(`<details><summary>Raw response JSON</summary><pre class="block">${esc(JSON.stringify(res, null, 2))}</pre></details>`);
+
+  body.innerHTML = blocks.map((b) => `<div class="card-b">${b}</div>`).join("");
+}
+
+// ============================================================ RETRIEVAL
+$("#search-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const out = $("#search-results"), meta = $("#search-meta");
+  out.innerHTML = `<div class="empty"><span class="spinner"></span></div>`; meta.innerHTML = "";
+  try {
+    const res = await api("/search", { method: "POST", body: { query: $("#search-q").value, top_k: +$("#search-k").value || 8, rerank: $("#search-rerank").checked } });
+    const m = res.retrieval_metadata;
+    meta.innerHTML = [`vector ${m.vector_candidates}`, `keyword ${m.keyword_candidates}`, `fused ${m.fused_candidates}`]
+      .map((x) => `<span class="pill">${x}</span>`).join("") +
+      Object.entries(m.timings_ms || {}).map(([k, v]) => `<span class="pill">${esc(k.replace(/_ms$/, "").replace(/_/g, " "))} ${fmtMs(v)}</span>`).join("");
+    if (!res.hits.length) { out.innerHTML = `<div class="empty">No candidates passed the retrieval filters.</div>`; return; }
+    out.innerHTML = `<table>
+      <tr><th>#</th><th>Chunk</th><th class="num">Rerank</th><th class="num">RRF</th><th class="num">Vector sim</th><th class="num">Keyword</th><th>Ranks</th></tr>
+      ${res.hits.map((h, i) => `<tr>
+        <td class="num">${i + 1}</td>
+        <td><strong>${esc(h.metadata.component || h.document_title || "")}</strong>
+          <div class="small muted">${esc(h.source || "")}${h.page ? " · page " + esc(h.page) : ""}${h.section ? " · " + esc(h.section) : ""}</div>
+          <div class="snippet">${esc(h.content)}</div></td>
+        <td class="num score">${fmtNum(h.scores.rerank, 4)}</td>
+        <td class="num score">${fmtNum(h.scores.rrf, 4)}</td>
+        <td class="num score">${fmtNum(h.scores.vector_similarity, 3)}</td>
+        <td class="num score">${fmtNum(h.scores.keyword_rank, 3)}</td>
+        <td class="small mono">${esc(Object.entries(h.ranks).map(([k, v]) => `${k}:${v}`).join(" "))}</td></tr>`).join("")}
+    </table>`;
+  } catch (err) { out.innerHTML = `<div class="card-b"><div class="error-box">${esc(err.message)}</div></div>`; }
+});
+
+// =========================================================== COMPONENTS
+let categoriesLoaded = false;
+$("#comp-form").addEventListener("submit", (e) => { e.preventDefault(); loadComponents(); });
+async function loadComponents() {
+  const out = $("#comp-results");
+  out.innerHTML = `<div class="empty"><span class="spinner"></span></div>`;
+  const p = new URLSearchParams({ limit: "500" });
+  const q = $("#comp-q").value.trim(), cat = $("#comp-cat").value, mn = $("#comp-min").value, mx = $("#comp-max").value, sort = $("#comp-sort").value;
+  if (q) p.set("q", q); if (cat) p.set("category", cat); if (mn) p.set("min_price", mn); if (mx) p.set("max_price", mx); if (sort) p.set("sort", sort);
+  try {
+    const res = await api("/components?" + p);
+    if (!categoriesLoaded && !q && !cat && !mn && !mx) {
+      const cats = [...new Set(res.items.map((c) => c.category))].sort();
+      $("#comp-cat").insertAdjacentHTML("beforeend", cats.map((c) => `<option>${esc(c)}</option>`).join(""));
+      categoriesLoaded = true;
+    }
+    const rows = (list, partial) => list.map((c, i) => `
+      <tr class="clickable" data-key="${partial ? "p" : "m"}${i}">
+        <td><strong>${esc(c.name)}</strong>${partial ? ' <span class="pill warn">partial</span>' : ""}</td>
+        <td>${esc(c.category)}</td>
+        <td class="num">${esc(fmtPrice(c.price_min, c.price_max, c.currency))}</td>
+        <td class="small muted">${esc(c.aliases.slice(0, 5).join(", "))}${c.aliases.length > 5 ? " …" : ""}</td>
+        <td class="num">${c.sources.length}</td></tr>
+      <tr class="detail-row" data-for="${partial ? "p" : "m"}${i}" hidden><td colspan="5">
+        ${c.description ? `<div>${esc(c.description)}</div>` : ""}
+        ${c.typical_uses.length ? `<div class="small" style="margin-top:4px"><strong>Typical uses:</strong> ${esc(c.typical_uses.join("; "))}</div>` : ""}
+        <div class="small" style="margin-top:4px"><strong>All aliases:</strong> ${esc(c.aliases.join(", ") || "–")}</div>
+        <div class="small" style="margin-top:4px"><strong>Price sources:</strong> ${c.sources.map((s) => `${esc(s.document_title || s.source_name)} — <span class="mono">“${esc(s.price_text)}”</span>${s.supplier ? " (" + esc(s.supplier) + ")" : ""}`).join("; ") || "–"}</div>
+        <div class="small muted mono" style="margin-top:4px">id ${esc(c.id)}</div>
+      </td></tr>`).join("");
+    if (!res.items.length && !res.partial_matches.length) { out.innerHTML = `<div class="empty">No components match these filters.</div>`; return; }
+    out.innerHTML = `<table>
+      <tr><th>Component (${res.total})</th><th>Category</th><th class="num">Price</th><th>Aliases</th><th class="num">Sources</th></tr>
+      ${rows(res.items, false)}
+      ${res.partial_matches.length ? `<tr><td colspan="5" class="small muted"><strong>Partial matches</strong> — price range straddles the limit</td></tr>${rows(res.partial_matches, true)}` : ""}
+    </table>`;
+  } catch (err) { out.innerHTML = `<div class="card-b"><div class="error-box">${esc(err.message)}</div></div>`; }
+}
+$("#comp-results").addEventListener("click", (e) => {
+  const row = e.target.closest("tr.clickable"); if (!row) return;
+  const detail = $(`tr[data-for="${row.dataset.key}"]`, $("#comp-results"));
+  if (detail) detail.hidden = !detail.hidden;
+});
+
+// ============================================================ DOCUMENTS
+$("#docs-refresh").addEventListener("click", loadDocuments);
+async function loadDocuments() {
+  const out = $("#docs-list");
+  out.innerHTML = `<div class="empty"><span class="spinner"></span></div>`;
+  try {
+    const res = await api("/documents?limit=200");
+    if (!res.items.length) { out.innerHTML = `<div class="empty">No documents ingested yet.</div>`; return; }
+    out.innerHTML = `<table>
+      <tr><th>Title</th><th>Type</th><th>Visibility</th><th>Ingested</th><th></th></tr>
+      ${res.items.map((d) => `<tr>
+        <td><strong>${esc(d.title)}</strong><div class="small muted">${esc(d.source_name)}</div></td>
+        <td>${esc(d.source_type)}</td><td>${esc(d.visibility)}</td>
+        <td class="small">${esc(new Date(d.created_at).toLocaleString())}</td>
+        <td class="num"><button class="btn small" data-view="${esc(d.id)}">View</button>
+          <button class="btn small danger" data-del="${esc(d.id)}" data-title="${esc(d.title)}">Delete</button></td></tr>`).join("")}
+    </table>`;
+  } catch (err) { out.innerHTML = `<div class="card-b"><div class="error-box">${esc(err.message)}</div></div>`; }
+}
+$("#docs-list").addEventListener("click", async (e) => {
+  const view = e.target.closest("[data-view]"), del = e.target.closest("[data-del]");
+  if (view) {
+    const card = $("#doc-detail-card"), out = $("#doc-detail");
+    card.hidden = false; out.innerHTML = `<span class="spinner"></span>`;
+    try {
+      const d = await api(`/documents/${view.dataset.view}?chunk_limit=5`);
+      $("#doc-detail-title").textContent = d.title;
+      out.innerHTML = `<dl class="kv">
+          <dt>Source</dt><dd>${esc(d.source_name)} (${esc(d.source_type)})</dd>
+          <dt>Chunks</dt><dd>${esc(d.chunk_count)}</dd>
+          <dt>Embedding</dt><dd class="mono">${esc(d.metadata.embedding_model || "–")} · ${esc(d.metadata.embedding_dimension || "")}d</dd>
+          <dt>Hash</dt><dd class="mono small">${esc(d.content_hash.slice(0, 16))}…</dd></dl>
+        <p class="sec-title" style="margin-top:12px">First chunks</p>
+        ${d.chunks.map((c) => `<div class="source"><div class="small muted">#${c.chunk_index}${c.section ? " · " + esc(c.section) : ""}${c.page_number ? " · page " + c.page_number : ""} · ${esc(c.token_count)} tokens</div><div class="snippet">${esc(c.content)}</div></div>`).join("")}`;
+    } catch (err) { out.innerHTML = `<div class="error-box">${esc(err.message)}</div>`; }
+  }
+  if (del) {
+    if (!confirm(`Delete “${del.dataset.title}” and all its chunks? Components only priced by this document are removed too.`)) return;
+    try { await api(`/documents/${del.dataset.del}`, { method: "DELETE" }); $("#doc-detail-card").hidden = true; loadDocuments(); loadHealth(); }
+    catch (err) { alert("Delete failed: " + err.message); }
+  }
+});
+$("#upload-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const file = $("#upload-file").files[0]; if (!file) return;
+  const status = $("#upload-status"), btn = $("#upload-btn");
+  const form = new FormData();
+  form.append("file", file);
+  if ($("#upload-title").value.trim()) form.append("title", $("#upload-title").value.trim());
+  if ($("#upload-type").value) form.append("source_type", $("#upload-type").value);
+  form.append("visibility", $("#upload-vis").value);
+  form.append("force", $("#upload-force").checked ? "true" : "false");
+  btn.disabled = true; status.innerHTML = `<span class="spinner"></span> Ingesting ${esc(file.name)}…`;
+  try {
+    const r = await api("/ingest/upload", { method: "POST", form });
+    const cls = r.status === "completed" ? "ok" : r.status === "duplicate" ? "warn" : "bad";
+    status.innerHTML = `<span class="pill ${cls}">${esc(r.status)}</span> ${esc(r.chunks_created)} chunks · ${esc(r.components_upserted)} components${r.replaced_previous ? " · replaced previous version" : ""}${r.message ? `<div class="muted">${esc(r.message)}</div>` : ""}`;
+    loadDocuments(); loadHealth(); categoriesLoaded = false; loaded.components = false;
+  } catch (err) { status.innerHTML = `<div class="error-box">${esc(err.message)}</div>`; }
+  finally { btn.disabled = false; }
+});
+
+// ---------------------------------------------------------------- start
+loadHealth();
+setInterval(loadHealth, 30000);
+const startTab = store.get("rag.tab", "ask");
+if (startTab !== "ask" && document.getElementById("tab-" + startTab)) showTab(startTab);
+questionEl.focus();
+</script>
+</body>
+</html>

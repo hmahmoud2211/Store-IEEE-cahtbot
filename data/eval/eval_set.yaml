@@ -1,0 +1,119 @@
+# RAG evaluation set.
+#
+# expected_components : components that MUST appear in the retrieved/structured results
+#                       (ground truth for precision / recall / MRR / hit@k)
+# expected_query_type : router decision
+# answer_must_contain : strings the final answer must contain (faithfulness to the KB)
+# must_refuse         : the KB does not contain the answer; the system must say so
+
+- id: q01
+  question: What is the price of the NE555?
+  expected_query_type: FACT_LOOKUP
+  expected_components: [NE555 Timer IC]
+  answer_must_contain: ["4–10 EGP"]
+
+- id: q02
+  question: What is the price of a 74LS85 comparator?
+  expected_query_type: FACT_LOOKUP
+  expected_components: [74LS85 / 7485 Comparator]
+  answer_must_contain: ["25 EGP"]
+
+- id: q03
+  question: Which counter costs less than 20 EGP?
+  expected_query_type: PRICE_FILTER
+  expected_components: [74LS161 Counter]
+  answer_must_contain: ["74LS161", "18 EGP"]
+  answer_must_not_contain: ["7493 Binary Counter"]
+
+- id: q04
+  question: Which counter ICs cost less than 25 EGP?
+  expected_query_type: PRICE_FILTER
+  expected_components: [74LS161 Counter, CD4017 Counter]
+  answer_must_contain: ["74LS161", "18 EGP"]
+
+- id: q05
+  question: Compare DS1307 and DS3231.
+  expected_query_type: COMPARISON
+  expected_components: [DS1307 RTC IC, DS3231 RTC Module]
+  answer_must_contain: ["20 EGP", "135 EGP"]
+
+- id: q06
+  question: What is the cheapest display?
+  expected_query_type: PRICE_FILTER
+  expected_components: [Single 7-segment display]
+  answer_must_contain: ["Single 7-segment display", "5–18 EGP"]
+
+- id: q07
+  question: What components are related to seven-segment displays?
+  expected_query_type: SEMANTIC_SEARCH
+  expected_components: [Single 7-segment display, Dual 7-segment display, 4-digit 7-segment display, CD4511 BCD-to-7-Segment Decoder, 7447 / 7448 7-Segment Driver]
+
+- id: q08
+  question: Which sensor costs approximately 40 EGP?
+  expected_query_type: PRICE_FILTER
+  expected_components: [HC-SR04 Ultrasonic Sensor]
+  answer_must_contain: ["HC-SR04", "40 EGP"]
+
+- id: q09
+  question: Give me all components costing below 15 EGP.
+  expected_query_type: PRICE_FILTER
+  expected_components: [Resistors, Standard LED, Capacitors, Push button, NE555 Timer IC, 7805 voltage regulator]
+  answer_must_contain: ["Resistors", "7805"]
+
+- id: q10
+  question: What is the price of an ESP32?
+  expected_query_type: FACT_LOOKUP
+  expected_components: []
+  must_refuse: true
+  answer_must_contain: ["ESP32"]
+
+- id: q11
+  question: What components can I use to build a digital clock?
+  expected_query_type: RECOMMENDATION
+  expected_components: [4-digit 7-segment display, DS1307 RTC IC, DS3231 RTC Module, CD4511 BCD-to-7-Segment Decoder, 74LS161 Counter]
+
+- id: q12
+  question: Which sensor is cheaper, HC-SR04 or IR obstacle sensor?
+  expected_query_type: COMPARISON
+  expected_components: [HC-SR04 Ultrasonic Sensor, IR obstacle sensor]
+  answer_must_contain: ["40 EGP", "45 EGP"]
+
+- id: q13
+  question: How much would 2 x NE555, 1 x 400-point breadboard and 5 x LED approximately cost?
+  expected_query_type: CALCULATION
+  expected_components: [NE555 Timer IC, 400-point breadboard, Standard LED]
+  answer_must_contain: ["38–60 EGP"]
+
+- id: q14
+  question: What components do I need for a timer circuit?
+  expected_query_type: RECOMMENDATION
+  expected_components: [NE555 Timer IC]
+
+- id: q15
+  question: Give me all components related to counters.
+  expected_query_type: SEMANTIC_SEARCH
+  expected_components: [74LS161 Counter, 7493 Binary Counter, CD4017 Counter]
+
+- id: q16
+  question: 555 timer
+  expected_query_type: FACT_LOOKUP
+  expected_components: [NE555 Timer IC]
+  answer_must_contain: ["4–10 EGP"]
+
+- id: q17
+  question: HC SR04
+  expected_query_type: FACT_LOOKUP
+  expected_components: [HC-SR04 Ultrasonic Sensor]
+  answer_must_contain: ["40 EGP"]
+
+- id: q18
+  question: How do I bake sourdough bread?
+  expected_query_type: SEMANTIC_SEARCH
+  expected_components: []
+  must_refuse: true
+
+- id: q19
+  question: What is the price of an Arduino Uno?
+  expected_query_type: SEMANTIC_SEARCH
+  expected_components: []
+  must_refuse: true

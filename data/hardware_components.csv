@@ -1,0 +1,33 @@
+component,price,description,typical_uses
+NE555 Timer IC,4–10 EGP,"Single 555 timer IC (8-pin) that generates time delays and oscillations in monostable, astable and bistable modes.",timer circuits; clock pulse generator; LED flasher; PWM; tone generator
+NE555 adjustable timer module,30–35 EGP,Ready-made 555-based timer board with a potentiometer to adjust the delay or frequency.,adjustable delay timer; pulse generator; quick prototyping of timer circuits
+74LS85 / 7485 Comparator,25 EGP,"4-bit magnitude comparator that compares two 4-bit binary numbers and outputs A>B, A=B and A<B; cascadable.",comparing binary numbers; alarm or match detection in digital clocks; digital logic labs
+74LS161 Counter,18 EGP,Synchronous presettable 4-bit binary counter with synchronous load and asynchronous clear.,binary counting; frequency division; modulo-N counters in digital clocks; timers
+7493 Binary Counter,30 EGP,4-bit binary ripple counter with divide-by-2 and divide-by-8 sections.,ripple counting; frequency division; simple digital counters
+74LS08 / 7408 AND Gate,15 EGP,Quad 2-input AND gate IC.,combinational logic; counter reset and decode logic; enabling signals
+74LS32 / 7432 OR Gate,15 EGP,Quad 2-input OR gate IC.,combinational logic; combining trigger or reset signals
+74HC04 / NOT Gate,12–20 EGP,"Hex inverter (six NOT gates), high-speed CMOS.",signal inversion; simple oscillators; logic level inversion
+74LS74 Flip-Flop,20–30 EGP,Dual D-type positive-edge-triggered flip-flop with preset and clear.,data latching; divide-by-2 frequency division; registers; switch debouncing
+CD4017 Counter,15–25 EGP,CMOS decade (Johnson) counter with 10 decoded outputs.,LED chasers and sequencers; decade counting; timer circuits together with a 555
+CD4511 BCD-to-7-Segment Decoder,25 EGP,CMOS BCD-to-7-segment latch/decoder/driver for common-cathode displays.,driving common-cathode 7-segment displays; digital clocks; counters with a numeric display
+7447 / 7448 7-Segment Driver,25 EGP,"BCD-to-7-segment decoder/driver; the 7447 has open-collector outputs for common-anode displays, the 7448 has internal pull-ups for common-cathode displays.",driving 7-segment displays; digital clocks; counter displays
+Single 7-segment display,5–18 EGP,One-digit seven-segment LED display (common anode or common cathode).,showing a single digit; counters; digital clocks
+Dual 7-segment display,15 EGP,Two-digit seven-segment LED display.,two-digit counters; minutes or seconds display in clocks
+4-digit 7-segment display,16 EGP,Four-digit multiplexed seven-segment LED display.,digital clocks showing hours and minutes; timers; multi-digit counters
+HC-SR04 Ultrasonic Sensor,40 EGP,"Ultrasonic distance sensor module with trigger and echo pins, roughly 2 cm to 4 m range, 5V supply.",distance measurement; obstacle detection; parking sensors
+IR obstacle sensor,45 EGP,Infrared obstacle-avoidance sensor module with adjustable detection distance and a digital output.,obstacle avoidance; object detection; edge detection
+DS1307 RTC IC,20 EGP,"I2C real-time clock chip that keeps seconds, minutes, hours, date, month and year; needs an external 32.768 kHz crystal and a backup battery.",digital clocks; timekeeping; timestamps for data logging
+DS1307 RTC Module + battery,65 EGP,Ready-to-use DS1307 real-time clock board with crystal and coin-cell backup battery.,digital clocks; timekeeping with microcontrollers
+DS3231 RTC Module,135 EGP,High-accuracy I2C real-time clock module with a temperature-compensated crystal oscillator (TCXO) and battery backup.,precise digital clocks; alarms; data logging
+DIP switch,5–15 EGP,Bank of small on/off switches in a DIP package for setting binary values.,setting binary inputs; configuration; preset values for counters and comparators
+Push button,2–5 EGP,Momentary tactile push-button switch.,user input; reset and start buttons; manual clock pulses
+Standard LED,1–3 EGP,Standard light-emitting diode (typically 3 mm or 5 mm).,status indicators; showing logic states
+Buzzer,10–25 EGP,Piezo or electromagnetic buzzer for audible alerts.,alarms; timer alerts; audible feedback
+2N2222 / similar transistor,5–15 EGP,General-purpose NPN bipolar junction transistor.,switching loads such as buzzers relays and LEDs; signal amplification
+Resistors,0.5–2 EGP each,Fixed resistors in common values.,current limiting for LEDs; pull-up and pull-down; setting 555 timing
+Capacitors,1–5 EGP each,Ceramic and electrolytic capacitors in common values.,555 timing; power supply decoupling and filtering
+400-point breadboard,25 EGP,Half-size solderless breadboard with 400 tie points.,prototyping small circuits
+830-point breadboard,35 EGP,Full-size solderless breadboard with 830 tie points.,prototyping larger circuits
+Jumper wire set,35–55 EGP,Set of jumper wires for breadboard connections.,breadboard wiring; connecting modules
+Breadboard 5V power module,40–95 EGP,Plug-in breadboard power supply module that provides regulated 5V rails.,powering breadboard circuits
+7805 voltage regulator,10 EGP,Linear voltage regulator with a fixed +5V output.,5V supply for logic ICs; regulating battery or adapter voltage

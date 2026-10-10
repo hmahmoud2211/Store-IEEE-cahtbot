@@ -1,0 +1,127 @@
+# Curated aliases, keyed by component name (matched after normalization).
+# Rule-based aliases (part numbers, family-stripped numbers, "555 timer"…) are
+# generated automatically; list only what rules cannot infer.
+
+NE555 Timer IC:
+  - 555 timer IC
+  - 555 IC
+NE555 adjustable timer module:
+  - 555 timer module
+  - adjustable timer module
+  - adjustable delay timer module
+74LS85 / 7485 Comparator:
+  - 4-bit magnitude comparator
+  - magnitude comparator
+74LS161 Counter:
+  - "74161"
+  - 4-bit synchronous binary counter
+  - synchronous counter
+7493 Binary Counter:
+  - 74LS93
+  - ripple counter
+  - 4-bit ripple counter
+74LS08 / 7408 AND Gate:
+  - AND gate
+  - quad AND gate
+  - quad 2-input AND gate
+74LS32 / 7432 OR Gate:
+  - OR gate
+  - quad OR gate
+  - quad 2-input OR gate
+74HC04 / NOT Gate:
+  - "7404"
+  - NOT gate
+  - inverter
+  - hex inverter
+74LS74 Flip-Flop:
+  - "7474"
+  - D flip-flop
+  - dual D flip-flop
+CD4017 Counter:
+  - decade counter
+  - Johnson counter
+  - 4017 decade counter
+CD4511 BCD-to-7-Segment Decoder:
+  - BCD to 7 segment decoder
+  - BCD decoder
+  - 4511 decoder
+7447 / 7448 7-Segment Driver:
+  - 74LS47
+  - 74LS48
+  - BCD to 7 segment driver
+  - seven segment driver
+Single 7-segment display:
+  - single digit 7-segment display
+  - 1-digit 7-segment display
+  - single seven segment display
+Dual 7-segment display:
+  - 2-digit 7-segment display
+  - dual seven segment display
+4-digit 7-segment display:
+  - four digit 7-segment display
+  - 4-digit seven segment display
+HC-SR04 Ultrasonic Sensor:
+  - HC-SR04
+  - ultrasonic sensor
+  - ultrasonic distance sensor
+IR obstacle sensor:
+  - IR sensor
+  - infrared obstacle sensor
+  - IR obstacle avoidance sensor
+  - FC-51
+DS1307 RTC IC:
+  - DS1307 chip
+  - DS1307 IC
+DS1307 RTC Module + battery:
+  - DS1307 RTC module
+  - DS1307 module
+  - Tiny RTC
+DS3231 RTC Module:
+  - DS3231 module
+  - precision RTC module
+  - ZS-042
+DIP switch:
+  - DIP switches
+Push button:
+  - pushbutton
+  - push buttons
+  - tactile switch
+  - tact switch
+  - button
+Standard LED:
+  - LED
+  - LEDs
+  - light emitting diode
+Buzzer:
+  - piezo buzzer
+  - buzzers
+2N2222 / similar transistor:
+  - NPN transistor
+  - PN2222
+Resistors:
+  - resistor
+Capacitors:
+  - capacitor
+400-point breadboard:
+  - 400 point breadboard
+  - half size breadboard
+  - half-size breadboard
+  - small breadboard
+830-point breadboard:
+  - 830 point breadboard
+  - full size breadboard
+  - full-size breadboard
+  - large breadboard
+Jumper wire set:
+  - jumper wires
+  - jumper wire
+  - dupont wires
+Breadboard 5V power module:
+  - breadboard power supply
+  - breadboard power module
+  - MB102 power module
+7805 voltage regulator:
+  - L7805
+  - LM7805
+  - 5V regulator
+  - 5V voltage regulator
